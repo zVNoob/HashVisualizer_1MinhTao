@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.shape.Polygon?>
+
+
+<fx:root spacing="10.0" type="HBox" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <Polygon fx:id="currentMark" fill="WHITE" points="-50.0, 24.0, -50.0, 46.0, -35.0, 35.0" stroke="WHITE" strokeType="INSIDE" />
+   </children>
+</fx:root>

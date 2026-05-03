@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.hashvis.hashfunc.HashFunctionNumber?>
+<?import com.hashvis.hashfunc.HashFunctionString?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <TextField layoutX="213.0" layoutY="142.0" />
+      <Label layoutX="118.0" layoutY="60.0" text="Hash table visualizer">
+         <font>
+            <Font size="24.0" />
+         </font>
+      </Label>
+      <Label layoutX="28.0" layoutY="283.0" text="h1(s,n):" />
+      <Label layoutX="28.0" layoutY="339.0" text="h2(k,n):" />
+      <ChoiceBox layoutX="213.0" layoutY="178.0" prefWidth="150.0" />
+      <ChoiceBox layoutX="213.0" layoutY="217.0" prefHeight="26.0" prefWidth="248.0" />
+      <Label layoutX="164.0" layoutY="146.0" text="Size" />
+      <Label layoutX="136.0" layoutY="182.0" text="Datatype" />
+      <Label layoutX="14.0" layoutY="221.0" text="Collision resolving algorithm" />
+      <HashFunctionString layoutX="90.0" layoutY="280.0" prefWidth="786.0" />
+      <HashFunctionNumber layoutX="90.0" layoutY="335.0" prefWidth="786.0" />
+      <Label layoutX="28.0" layoutY="252.0" text="Hash function(s):" />
+   </children>
+</AnchorPane>
