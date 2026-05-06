@@ -1,73 +1,71 @@
 package com.hashvis.table;
 
+import javax.swing.*;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
 import java.util.ArrayList;
 
-import javafx.animation.*;
-import javafx.application.Platform;
-import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.effect.DropShadow;
-import javafx.scene.layout.HBox;
-import javafx.scene.paint.Color;
-import javafx.util.Duration;
+public class Row extends JPanel {
+  // UI components
+  private final JLabel indexLabel = new JLabel();
+  private final JPanel contentPanel = new JPanel();
 
-public class Row extends HBox {
-  @FXML
-  private Label index;
-
-  @FXML
-  private HBox content;
-  @FXML
-  private ScrollPane scrollPane;
-
-  private ArrayList<Item> items = new ArrayList<Item>();
-
+  // Logic components
+  private final ArrayList<Item> items = new ArrayList<>();
   private int currentIndex = -1;
   private int prevIndex = -1;
   private boolean isChosen = false;
 
-  private final DropShadow glowEffect = new DropShadow();
-  private final Timeline glowTimeline;
-  private final Timeline deglowTimeline;
+  // Row-level Animation (Border)
+  private final Color COLOR_IDLE = new Color(0, 160, 0);
+  private final Color COLOR_GLOW = new Color(0, 128, 255); // Blueish glow
+  private final int ANIMATION_DURATION = 300;
+
+  private Color currentBorderColor = COLOR_IDLE;
+  private final AnimatableBorder rowBorder = new AnimatableBorder();
+  private Timer animationTimer;
 
   public Row(int index) {
     super();
-    FXMLLoader mainLoader = new FXMLLoader(getClass().getResource("Row.fxml"));
-    mainLoader.setRoot(this);
-    mainLoader.setController(this);
-    try {
-      mainLoader.load();
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    // Setup the effect
-    glowEffect.setRadius(3);
-    glowEffect.setSpread(1.0);
-    glowEffect.setColor(new Color(0.0, 0.0, 0.0, 1.0));
-    this.setEffect(glowEffect);
 
-    // Animations target the radius property
-    glowTimeline = new Timeline(new KeyFrame(Duration.millis(300),
-        new KeyValue(glowEffect.colorProperty(), new Color(0.0, 0.5, 1.0, 1.0))));
+    // 1. Layout Setup
+    this.setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+    this.setOpaque(false);
 
-    deglowTimeline = new Timeline(new KeyFrame(Duration.millis(300),
-        new KeyValue(glowEffect.colorProperty(), new Color(0.0, 0.0, 0.0, 1.0))));
+    // 2. Index Label Setup
+    indexLabel.setText(String.valueOf(index));
+    indexLabel.setPreferredSize(new Dimension(30, 45));
+    indexLabel.setHorizontalAlignment(SwingConstants.CENTER);
+    this.add(indexLabel);
 
-    this.index.setText(String.valueOf(index));
+    // 3. Content Panel Setup (Holds the items)
+    contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.X_AXIS));
+    contentPanel.setOpaque(false);
+
+    this.add(contentPanel);
+
+    // 5. Row Border Setup
+    this.setBorder(new CompoundBorder(
+        rowBorder,
+        new EmptyBorder(2, 5, 2, 5)));
   }
 
   private void updateIndex() {
     if (currentIndex == prevIndex)
       return;
-    if (prevIndex != -1)
+
+    if (prevIndex != -1 && prevIndex < items.size()) {
       items.get(prevIndex).deglow();
-    if (currentIndex != -1)
-      if (isChosen)
+    }
+
+    if (currentIndex != -1 && currentIndex < items.size()) {
+      if (isChosen) {
         items.get(currentIndex).glow();
-      else
+      } else {
         items.get(currentIndex).deglow();
+      }
+    }
     prevIndex = currentIndex;
   }
 
@@ -79,52 +77,83 @@ public class Row extends HBox {
       return null;
     }
     updateIndex();
-    scrollToItem(items.get(currentIndex));
     return items.get(currentIndex);
+  }
+
+  public int getItemsCount() {
+    return items.size();
   }
 
   public void choose() {
     isChosen = true;
-    deglowTimeline.stop();
-    glowTimeline.play();
+    startAnimation(COLOR_GLOW);
     updateIndex();
   }
 
   public void unchoose() {
     isChosen = false;
     currentIndex = -1;
-    glowTimeline.stop();
-    deglowTimeline.play();
+    startAnimation(COLOR_IDLE);
     updateIndex();
+  }
+
+  public void reset() {
+    currentIndex = -1;
+    prevIndex = -1;
+    isChosen = false;
+    startAnimation(Color.BLACK);
+    for (Item item : items) {
+      item.reset();
+    }
   }
 
   public Item addItem(String text) {
     Item item = new Item(text);
     items.add(item);
-    content.getChildren().add(item);
+    contentPanel.add(item);
+
+    // In Swing, we must tell the container to recalculate layout
+    contentPanel.revalidate();
+    contentPanel.repaint();
     return item;
   }
 
   public void removeItem(Item item) {
     items.remove(item);
-    content.getChildren().remove(item);
+    contentPanel.remove(item);
+    contentPanel.revalidate();
+    contentPanel.repaint();
   }
 
-  private void scrollToItem(Item node) {
-    // We use Platform.runLater to ensure the layout pass is complete
-    // so that layoutY is calculated correctly.
-    Platform.runLater(() -> {
-      double targetY = node.getLayoutX();
-      double contentWidth = content.getWidth();
-      double viewportWidth = scrollPane.getWidth();
+  // =========================================================================
+  // ANIMATION LOGIC (Same as Item class)
+  // =========================================================================
+  private void startAnimation(Color targetColor) {
+    if (animationTimer != null && animationTimer.isRunning()) {
+      animationTimer.stop();
+    }
 
-      if (contentWidth > viewportWidth) {
-        double desiredTop = targetY - (viewportWidth / 2) + (node.getWidth() / 2);
-        double vValue = desiredTop / (contentWidth - viewportWidth);
-        // Clamp value between 0 and 1 to prevent crashes
-        vValue = Math.max(0, Math.min(1, vValue));
-        scrollPane.setHvalue(vValue);
-      }
+    final Color startColor = this.currentBorderColor;
+    final long startTime = System.currentTimeMillis();
+
+    animationTimer = new Timer(16, e -> {
+      long elapsed = System.currentTimeMillis() - startTime;
+      float progress = Math.min(1f, (float) elapsed / ANIMATION_DURATION);
+
+      currentBorderColor = interpolateColor(startColor, targetColor, progress);
+      rowBorder.setColor(currentBorderColor);
+      repaint();
+
+      if (progress >= 1f)
+        animationTimer.stop();
     });
+    animationTimer.start();
+  }
+
+  private Color interpolateColor(Color start, Color end, float progress) {
+    int r = (int) (start.getRed() + (end.getRed() - start.getRed()) * progress);
+    int g = (int) (start.getGreen() + (end.getGreen() - start.getGreen()) * progress);
+    int b = (int) (start.getBlue() + (end.getBlue() - start.getBlue()) * progress);
+    return new Color(r, g, b);
   }
 }

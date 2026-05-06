@@ -1,133 +1,140 @@
 package com.hashvis.hashalgo;
 
-import java.awt.TextField;
+import com.hashvis.table.Table;
+
+import javax.swing.*;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import com.hashvis.table.Table;
+public class HashAlgorithmVisualizer extends JPanel {
+  // UI Components
+  private final JPanel codeArea;
+  private final JScrollPane codeScrollPane;
+  private final JLabel statusLabel;
+  private final JLabel headerLabel;
 
-import javafx.application.Platform;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.SplitPane;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.VBox;
-
-public class HashAlgorithmVisualizer extends SplitPane {
-  public static class VariableEntry {
-    private final String name;
-    private final String value;
-
-    public VariableEntry(String name, String value) {
-      this.name = name;
-      this.value = value;
-    }
-
-    public String getName() {
-      return name;
-    }
-
-    public String getValue() {
-      return value;
-    }
-  }
-
-  @FXML
-  private VBox codeArea;
-  @FXML
-  private ScrollPane codeScrollPane;
-  @FXML
-  private TableView<VariableEntry> varTable;
-  @FXML
-  private TableColumn<VariableEntry, String> varName;
-  @FXML
-  private TableColumn<VariableEntry, String> varValue;
-
-  private ArrayList<HighlightedCodePane> sourceCodes = new ArrayList<HighlightedCodePane>();
-  private HashMap<String, Object> variables = new HashMap<String, Object>();
-  private HashAlgorithmSymbolTable symbolTable = null;
+  // Logic Components
+  private final ArrayList<HighlightedCodePane> sourceCodes = new ArrayList<>();
+  private final HashMap<String, Object> variables = new HashMap<>();
+  private HashAlgorithmSymbolTable symbolTable;
+  private int currentHighlighted = -1;
 
   public HashAlgorithmVisualizer(Table table) {
-    super();
-    FXMLLoader loader = new FXMLLoader(getClass().getResource("HashAlgorithmVisualizer.fxml"));
-    loader.setRoot(this);
-    loader.setController(this);
-    try {
-      loader.load();
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    symbolTable = new HashAlgorithmSymbolTable(variables, table);
-    varName.setCellValueFactory(new PropertyValueFactory<>("name"));
-    varValue.setCellValueFactory(new PropertyValueFactory<>("value"));
+    // 1. General Layout Setup
+    setLayout(new BorderLayout(10, 10));
+    setBackground(Color.DARK_GRAY);
+
+    // 2. Header Label ("Code")
+    headerLabel = new JLabel("Code", SwingConstants.CENTER);
+    headerLabel.setForeground(Color.WHITE);
+    headerLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+
+    // 3. Code Area Setup (The "VBox" replacement)
+    codeArea = new JPanel();
+    codeArea.setLayout(new BoxLayout(codeArea, BoxLayout.Y_AXIS));
+    codeArea.setBackground(Color.DARK_GRAY);
+
+    // 4. ScrollPane Setup
+    codeScrollPane = new JScrollPane(codeArea);
+    codeScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+    codeScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+    codeScrollPane.setBorder(BorderFactory.createEmptyBorder());
+
+    // 5. Status Label
+    statusLabel = new JLabel("Status: ");
+    statusLabel.setForeground(Color.WHITE);
+    statusLabel.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 0));
+
+    // 6. Assemble the main layout
+    JPanel topContainer = new JPanel(new BorderLayout());
+    topContainer.setOpaque(false);
+    topContainer.add(headerLabel, BorderLayout.NORTH);
+    topContainer.add(codeScrollPane, BorderLayout.CENTER);
+
+    JPanel bottomContainer = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    bottomContainer.setOpaque(false);
+    bottomContainer.add(statusLabel);
+
+    add(topContainer, BorderLayout.CENTER);
+    add(bottomContainer, BorderLayout.SOUTH);
+
+    // Initialize logic
+    this.symbolTable = new HashAlgorithmSymbolTable(variables, table);
   }
 
-  private void updateVariables() {
-    ObservableList<VariableEntry> data = FXCollections.observableArrayList();
-    variables.forEach((k, v) -> data.add(new VariableEntry(k, v.toString())));
-    varTable.setItems(data);
-  }
-
-  private int currentHighlighted;
-
-  public void reset(ArrayList<String> sourceCodes) {
-    for (HighlightedCodePane pane : this.sourceCodes) {
-      codeArea.getChildren().remove(pane);
-    }
+  public void reset(ArrayList<String> sourceCodesText) {
+    // Clear existing components from the codeArea
+    codeArea.removeAll();
     this.sourceCodes.clear();
-    for (String line : sourceCodes) {
+
+    // Add new HighlightedCodePanes
+    for (String line : sourceCodesText) {
       HighlightedCodePane pane = new HighlightedCodePane(symbolTable, line, true);
-      codeArea.getChildren().add(pane);
+      codeArea.add(pane);
       this.sourceCodes.add(pane);
     }
-    if (sourceCodes.size() > 0) {
+
+    // Refresh UI
+    codeArea.revalidate();
+    codeArea.repaint();
+
+    if (!this.sourceCodes.isEmpty()) {
       currentHighlighted = 0;
       symbolTable.resetInstructionCount();
       this.sourceCodes.get(currentHighlighted).glow();
     }
+
     variables.clear();
     variables.put("i", 10);
-    updateVariables();
+    // Variable table update logic removed as per request
   }
 
   public boolean next() {
     if (currentHighlighted == -1)
       return false;
-    // TODO: Enable this when actual code is done
+
+    // Logic from original code
     // sourceCodes.get(currentHighlighted).eval();
-    updateVariables();
+
     sourceCodes.get(currentHighlighted).deglow();
     symbolTable.incrementInstructionCount();
+
     currentHighlighted = symbolTable.getInstructionCount();
-    if (currentHighlighted >= sourceCodes.size())
+
+    if (currentHighlighted >= sourceCodes.size()) {
       currentHighlighted = -1;
-    if (currentHighlighted == -1)
+    }
+
+    if (currentHighlighted == -1) {
       return false;
-    sourceCodes.get(currentHighlighted).glow();
-    scrollToLine(sourceCodes.get(currentHighlighted));
+    }
+
+    // Highlight the next line and scroll to it
+    HighlightedCodePane nextPane = sourceCodes.get(currentHighlighted);
+    nextPane.glow();
+    scrollToLine(nextPane);
+
     return true;
   }
 
   private void scrollToLine(HighlightedCodePane node) {
-    // We use Platform.runLater to ensure the layout pass is complete
-    // so that layoutY is calculated correctly.
-    Platform.runLater(() -> {
-      double targetY = node.getLayoutY();
-      double contentHeight = codeArea.getHeight();
-      double viewportHeight = codeScrollPane.getHeight();
+    // Swing's equivalent of Platform.runLater is SwingUtilities.invokeLater
+    SwingUtilities.invokeLater(() -> {
+      JViewport viewport = codeScrollPane.getViewport();
+      int viewportHeight = viewport.getHeight();
 
-      if (contentHeight > viewportHeight) {
-        double desiredTop = targetY - (viewportHeight / 2) + (node.getHeight() / 2);
-        double vValue = desiredTop / (contentHeight - viewportHeight);
-        // Clamp value between 0 and 1 to prevent crashes
-        vValue = Math.max(0, Math.min(1, vValue));
-        codeScrollPane.setVvalue(vValue);
-      }
+      // The Y position of the component relative to the codeArea
+      int targetY = node.getY();
+      int nodeHeight = node.getHeight();
+
+      // Calculate the position to center the node in the viewport
+      int desiredTop = targetY - (viewportHeight / 2) + (nodeHeight / 2);
+
+      // Ensure we don't scroll into negative values
+      int scrollPosition = Math.max(0, desiredTop);
+
+      codeScrollPane.getVerticalScrollBar().setValue(scrollPosition);
     });
   }
 }

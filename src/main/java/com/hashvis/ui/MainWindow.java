@@ -1,52 +1,43 @@
 package com.hashvis.ui;
 
+import java.awt.BorderLayout;
+
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JPanel;
+import javax.swing.JSplitPane;
+
 import com.hashvis.hashalgo.HashAlgorithmVisualizer;
 import com.hashvis.table.Table;
 
-import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.SplitPane;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+public class MainWindow extends JPanel {
 
-public class MainWindow extends VBox {
-  @FXML
-  private SplitPane injectTable;
-  @FXML
-  private TextField hashKey;
-  @FXML
-  private ChoiceBox action;
-  @FXML
-  private VBox injectVisualizer;
-  @FXML
-  private Button animControlButton;
-
-  private HashAlgorithmVisualizer visualizer;
-  private Table table;
-
-  public MainWindow(int size) {
-    super();
-    FXMLLoader loader = new FXMLLoader(getClass().getResource("MainWindow.fxml"));
-    loader.setRoot(this);
-    loader.setController(this);
-    try {
-      loader.load();
-    } catch (Exception exception) {
-      exception.printStackTrace();
-    }
-    table = new Table(size, false);
-    injectTable.getItems().add(table);
-    injectTable.setDividerPositions(0.3);
-
-    visualizer = new HashAlgorithmVisualizer(table);
-    injectVisualizer.getChildren().add(visualizer);
-    VBox.setVgrow(visualizer, Priority.ALWAYS);
-  }
+  private final Table hashTable;
+  private final HashAlgorithmVisualizer visualizer;
+  private ControlPanel controlPanel;
+  private JSplitPane mainSplitPane;
 
   public MainWindow() {
-    this(100);
+    super();
+
+    setLayout(new BorderLayout(10, 10));
+    this.hashTable = new Table(10, true);
+
+    // 2. Initialize the Visualizer (inject the table)
+    this.visualizer = new HashAlgorithmVisualizer(hashTable);
+
+    this.controlPanel = new ControlPanel();
+
+    JPanel leftPanel = new JPanel();
+    leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
+    leftPanel.add(controlPanel);
+    leftPanel.add(Box.createVerticalStrut(10));
+    leftPanel.add(visualizer);
+
+    mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, hashTable);
+    mainSplitPane.setDividerLocation(400);
+    mainSplitPane.setBorder(null);
+
+    add(mainSplitPane, BorderLayout.CENTER);
   }
 }

@@ -19,6 +19,7 @@ public class HashAlgorithmSymbolTable extends SymbolTable {
   }
 
   private void prepareEnvironment() {
+
   }
 
   public int getInstructionCount() {

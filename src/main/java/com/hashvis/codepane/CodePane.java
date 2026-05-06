@@ -1,40 +1,22 @@
 package com.hashvis.codepane;
 
-import javafx.scene.layout.StackPane;
-
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
+import java.awt.event.*;
 import java.io.InputStream;
 
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicScrollBarUI;
-import javax.swing.text.AbstractDocument;
-import javax.swing.text.AttributeSet;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.DefaultCaret;
-import javax.swing.text.Document;
-import javax.swing.text.DocumentFilter;
+import javax.swing.text.*;
 
 import com.hashvis.codepane.parser.*;
 import com.hashvis.codepane.parser.ast.Ast;
 import com.hashvis.codepane.parser.ast.Ast.EvalException;
 
-import javafx.embed.swing.SwingNode;
-
-/**
- * HashFunction is a custom code editor component that embeds a Swing JTextPane
- * inside a JavaFX StackPane. It provides real-time syntax highlighting,
- * bracket matching, and an autocomplete suggestion system based on a custom
- * AST.
- */
-public class CodePane extends StackPane {
+public class CodePane extends JPanel {
   // UI components
   private Font font = loadFont(18);
   private JTextPane content = new JTextPane();
   private SuggestionOverlay popupMenu = new SuggestionOverlay(font);
-  private SwingNode swingNode = new SwingNode();
   // Logic components
   protected SymbolTable symbolTable = null;
   protected ParseTree parseTree = new ParseTree("", symbolTable);
@@ -67,7 +49,7 @@ public class CodePane extends StackPane {
   /**
    * Re-parses the entire document and refreshes highlighting.
    */
-  private void validate() {
+  private void validateExpr() {
     String text = content.getText();
     parseTree = new ParseTree(text, symbolTable);
     evalException = null;
@@ -95,11 +77,11 @@ public class CodePane extends StackPane {
   private void setupDocumentListener() {
     content.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
       public void insertUpdate(javax.swing.event.DocumentEvent e) {
-        validate();
+        validateExpr();
       }
 
       public void removeUpdate(javax.swing.event.DocumentEvent e) {
-        validate();
+        validateExpr();
       }
 
       public void changedUpdate(javax.swing.event.DocumentEvent e) {
@@ -132,10 +114,7 @@ public class CodePane extends StackPane {
     content.addFocusListener(new FocusAdapter() {
       @Override
       public void focusLost(FocusEvent e) {
-        if (content.isDisplayable()) {
-          content.requestFocusInWindow();
-        }
-        // popupMenu.setVisible(false);
+        popupMenu.setVisible(false);
       }
 
       @Override
@@ -165,7 +144,7 @@ public class CodePane extends StackPane {
         // 4. Move caret to the end of the inserted word
         content.setCaretPosition(currentToken.begin() + suggestion.length());
         // 5. Validate
-        validate();
+        validateExpr();
       } catch (Exception e) {
       }
     });
@@ -269,103 +248,41 @@ public class CodePane extends StackPane {
     return parseTree.eval();
   }
 
-  class SafeCaret extends DefaultCaret {
-    public SafeCaret() {
-      super();
-    }
-
-    @Override
-    public void adjustVisibility(Rectangle r) {
-      // The NPE happens inside scrollRectToVisible -> flushViewDirtyRegion
-      // We only allow visibility adjustment if the component is
-      // actually displayed and has a valid parent.
-      if (getComponent() != null && getComponent().isDisplayable()) {
-        try {
-          super.adjustVisibility(r);
-        } catch (NullPointerException npe) {
-          // Swallow the NPE specifically during the SwingNode transition phase
-          // This prevents the AWT thread from dying and stealing focus.
-        }
-      }
-    }
-  }
-
   public CodePane(SymbolTable symbolTable) {
     super();
     this.symbolTable = symbolTable;
-    // Constraints for the JavaFX container
-    this.setMinHeight(FIXED_HEIGHT);
-    this.setPrefHeight(FIXED_HEIGHT);
-    this.setMaxHeight(FIXED_HEIGHT);
-    this.setMinWidth(100);
-    this.setPrefWidth(USE_COMPUTED_SIZE);
-    this.setMaxWidth(USE_COMPUTED_SIZE);
-    swingNode.setFocusTraversable(true);
-
+    this.setLayout(new BorderLayout());
     // Inject Swing component
-    SwingUtilities.invokeLater(() -> {
-      content.setMinimumSize(new Dimension(100, FIXED_HEIGHT));
-      content.setFont(font);
-      content.setCaret(new SafeCaret());
-      // Setup no wrap TextPane
-      // (https://tips4java.wordpress.com/2009/01/25/no-wrap-text-pane/)
-      JPanel noWrapPanel = new JPanel(new BorderLayout());
-      noWrapPanel.add(content);
-      JScrollPane scrollPane = new JScrollPane(noWrapPanel);
-      // Setup a ScrollPane for the Swing component
-      scrollPane.setHorizontalScrollBarPolicy(ScrollPaneLayout.HORIZONTAL_SCROLLBAR_ALWAYS);
-      scrollPane.setVerticalScrollBarPolicy(ScrollPaneLayout.VERTICAL_SCROLLBAR_NEVER);
-      scrollPane.setBorder(null);
-      scrollPane.getHorizontalScrollBar().setUI(new ModernScrollBarUI());
-      swingNode.setContent(scrollPane);
-      // Setup listeners
-      highlighter = new TextHighlighter(content, scrollPane, popupMenu);
-      setupDocumentListener();
-      setupCaretListener();
-      setupFocusListener();
-      setupKeyBindings();
-      setupNewlineFilter();
-      // JavaFX -> Swing
-      swingNode.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
-        if (isNowFocused) {
-          // CRITICAL: We use a double-hop (Platform -> Swing)
-          // to ensure the SwingNode is fully realized in the FX scene graph
-          // before we ask the JTextPane to request focus.
-          javafx.application.Platform.runLater(() -> {
-            SwingUtilities.invokeLater(() -> {
-              if (content.isDisplayable()) {
-                content.requestFocusInWindow();
-              }
-            });
-          });
-        }
-      });
-
-      // Swing -> JavaFX
-      content.addFocusListener(new java.awt.event.FocusAdapter() {
-        @Override
-        public void focusGained(java.awt.event.FocusEvent e) {
-          javafx.application.Platform.runLater(() -> {
-            if (!swingNode.isFocused()) {
-              swingNode.requestFocus();
-            }
-          });
-        }
-      });
-    });
-    swingNode.setOnMousePressed(event -> {
-      swingNode.requestFocus();
-    });
-    this.getChildren().add(swingNode);
+    content.setMinimumSize(new Dimension(100, FIXED_HEIGHT));
+    this.setPreferredSize(new Dimension(400, FIXED_HEIGHT));
+    this.setMaximumSize(new Dimension(Integer.MAX_VALUE, FIXED_HEIGHT));
+    content.setFont(font);
+    // content.setCaret(new SafeCaret());
+    // Setup no wrap TextPane
+    // (https://tips4java.wordpress.com/2009/01/25/no-wrap-text-pane/)
+    JPanel noWrapPanel = new JPanel(new BorderLayout());
+    noWrapPanel.add(content);
+    JScrollPane scrollPane = new JScrollPane(noWrapPanel);
+    // Setup a ScrollPane for the Swing component
+    scrollPane.setHorizontalScrollBarPolicy(ScrollPaneLayout.HORIZONTAL_SCROLLBAR_ALWAYS);
+    scrollPane.setVerticalScrollBarPolicy(ScrollPaneLayout.VERTICAL_SCROLLBAR_NEVER);
+    scrollPane.setBorder(null);
+    scrollPane.getHorizontalScrollBar().setUI(new ModernScrollBarUI());
+    // Setup listeners
+    highlighter = new TextHighlighter(content, scrollPane, popupMenu);
+    setupDocumentListener();
+    setupCaretListener();
+    setupFocusListener();
+    setupKeyBindings();
+    setupNewlineFilter();
+    this.add(scrollPane, BorderLayout.CENTER);
   }
 
   public CodePane(SymbolTable symbolTable, String code, boolean readOnly) {
     this(symbolTable);
-    SwingUtilities.invokeLater(() -> {
-      tryEval = !readOnly;
-      content.setEditable(!readOnly);
-      content.setText(code);
-      content.setCaretPosition(0);
-    });
+    tryEval = !readOnly;
+    content.setEditable(!readOnly);
+    content.setText(code);
+    content.setCaretPosition(0);
   }
 }

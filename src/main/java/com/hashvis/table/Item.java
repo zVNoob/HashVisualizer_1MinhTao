@@ -1,50 +1,100 @@
 package com.hashvis.table;
 
-import javafx.animation.*;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.control.Label;
-import javafx.scene.effect.DropShadow;
-import javafx.scene.paint.Color;
-import javafx.util.Duration;
+import javax.swing.*;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
-public class Item extends Label {
-  private final DropShadow glowEffect = new DropShadow();
-  private final Timeline glowTimeline;
-  private final Timeline deglowTimeline;
+public class Item extends JLabel {
+  private final Color COLOR_IDLE = Color.ORANGE;
+  private final Color COLOR_GLOW = Color.RED;
+  private final int ANIMATION_DURATION = 300; // milliseconds
 
-  // Constructor for FXML text property
-  public Item(String text) {
+  private Color currentBorderColor = Color.BLACK;
+  private final AnimatableBorder animBorder = new AnimatableBorder();
+  private Timer animationTimer;
+
+  public Item() {
     super();
-    FXMLLoader mainLoader = new FXMLLoader(getClass().getResource("Item.fxml"));
-    mainLoader.setRoot(this);
-    mainLoader.setController(this);
-    try {
-      mainLoader.load();
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    // Setup the effect
-    glowEffect.setRadius(3);
-    glowEffect.setSpread(1.0);
-    glowEffect.setColor(new Color(0.0, 0.0, 0.0, 1.0));
-    this.setEffect(glowEffect);
+    // Swing components are transparent by default; must be opaque to show
+    // background color
+    this.setOpaque(true);
+    this.setBackground(Color.WHITE);
+    this.setHorizontalAlignment(SwingConstants.CENTER);
 
-    // Animations target the radius property
-    glowTimeline = new Timeline(new KeyFrame(Duration.millis(300),
-        new KeyValue(glowEffect.colorProperty(), new Color(1.0, 0.0, 0.0, 1.0))));
-
-    deglowTimeline = new Timeline(new KeyFrame(Duration.millis(300),
-        new KeyValue(glowEffect.colorProperty(), new Color(0.0, 0.0, 0.0, 1.0))));
-    setText(text);
+    // Setup Compound Border:
+    // Outer: Our custom animatable border
+    // Inner: Padding (equivalent to setPadding in JavaFX)
+    this.setBorder(new CompoundBorder(
+        new EmptyBorder(4, 4, 4, 4), // <--- OUTER MARGIN (The gap between boxes)
+        new CompoundBorder(
+            animBorder, // The white box border
+            new EmptyBorder(4, 4, 4, 4) // <--- INNER PADDING (Space inside the box)
+        )));
+    // this.setBorder(new CompoundBorder(
+    // animBorder,
+    // new EmptyBorder(5, 10, 5, 10)));
   }
 
+  public Item(String text) {
+    this();
+    this.setText(text);
+  }
+
+  /**
+   * Transitions the border color to Red
+   */
   public void glow() {
-    deglowTimeline.stop();
-    glowTimeline.play();
+    startAnimation(COLOR_GLOW);
   }
 
+  /**
+   * Transitions the border color to Black
+   */
   public void deglow() {
-    glowTimeline.stop();
-    deglowTimeline.play();
+    startAnimation(COLOR_IDLE);
   }
+
+  public void reset() {
+    startAnimation(Color.BLACK);
+  }
+
+  private void startAnimation(Color targetColor) {
+    if (animationTimer != null && animationTimer.isRunning()) {
+      animationTimer.stop();
+    }
+
+    final Color startColor = this.currentBorderColor;
+    final long startTime = System.currentTimeMillis();
+
+    animationTimer = new Timer(16, new ActionListener() { // ~60 FPS
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        long elapsed = System.currentTimeMillis() - startTime;
+        float progress = Math.min(1f, (float) elapsed / ANIMATION_DURATION);
+
+        // Linearly interpolate between start color and target color
+        currentBorderColor = interpolateColor(startColor, targetColor, progress);
+        animBorder.setColor(currentBorderColor);
+
+        // Repaint the component to show the new color
+        repaint();
+
+        if (progress >= 1f) {
+          animationTimer.stop();
+        }
+      }
+    });
+    animationTimer.start();
+  }
+
+  private Color interpolateColor(Color start, Color end, float progress) {
+    int r = (int) (start.getRed() + (end.getRed() - start.getRed()) * progress);
+    int g = (int) (start.getGreen() + (end.getGreen() - start.getGreen()) * progress);
+    int b = (int) (start.getBlue() + (end.getBlue() - start.getBlue()) * progress);
+    return new Color(r, g, b);
+  }
+
 }
