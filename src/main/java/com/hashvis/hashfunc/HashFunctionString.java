@@ -7,6 +7,7 @@ public class HashFunctionString extends HashFunction {
   public HashFunctionString() {
     super("sum(map(range(len(s)), {i: s[i]*256**i}))");
     symbolTable.set("s", new ArrayList<BigInteger>());
+    validateExpr();
   }
 
   public int compute(String key, int len) {

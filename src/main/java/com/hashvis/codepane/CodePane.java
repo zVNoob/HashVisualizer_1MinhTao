@@ -49,7 +49,7 @@ public class CodePane extends JPanel {
   /**
    * Re-parses the entire document and refreshes highlighting.
    */
-  private void validateExpr() {
+  public void validateExpr() {
     String text = content.getText();
     parseTree = new ParseTree(text, symbolTable);
     evalException = null;
@@ -280,9 +280,11 @@ public class CodePane extends JPanel {
 
   public CodePane(SymbolTable symbolTable, String code, boolean readOnly) {
     this(symbolTable);
-    tryEval = !readOnly;
-    content.setEditable(!readOnly);
+    tryEval = false;
+    content.setEditable(false);
     content.setText(code);
     content.setCaretPosition(0);
+    tryEval = !readOnly;
+    content.setEditable(!readOnly);
   }
 }

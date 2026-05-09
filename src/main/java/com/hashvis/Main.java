@@ -1,13 +1,8 @@
 package com.hashvis;
 
-import java.awt.event.ActionListener;
-
-import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-
-import com.hashvis.ui.ControlPanel;
-import com.hashvis.ui.MainWindow;
+import com.hashvis.ui.StartWindow;
 
 public class Main {
   public static void main(String[] args) {
@@ -18,12 +13,10 @@ public class Main {
         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
       } catch (Exception ignored) {
       }
-      JFrame frame = new JFrame("Hash Algorithm Visualizer");
-      frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-      frame.setContentPane(new MainWindow());
-      frame.setSize(800, 600);
+
+      // Start the application at the Main Menu
+      java.awt.Frame frame = new StartWindow();
       frame.setVisible(true);
     });
   }
-
 }

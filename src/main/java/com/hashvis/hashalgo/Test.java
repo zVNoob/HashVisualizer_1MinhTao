@@ -16,7 +16,7 @@ public class Test extends JFrame {
 
     // 1. Setup dependencies
     Table mockTable = new Table(10, false); // Dummy table
-    HashAlgorithmVisualizer visualizer = new HashAlgorithmVisualizer(mockTable);
+    HashAlgorithmVisualizer visualizer = new HashAlgorithmVisualizer();
 
     // 2. Add visualizer to center
     add(visualizer, BorderLayout.CENTER);

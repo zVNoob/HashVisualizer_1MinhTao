@@ -57,17 +57,18 @@ public class Lexer {
     // Strings
     if (code.charAt(currentPosition) == '"') {
       currentPosition++;
+      begin = currentPosition;
       while (currentPosition < code.length()
           && code.charAt(currentPosition) != '"') {
         currentPosition++;
       }
-      currentPosition++;
       int end = currentPosition;
+      currentPosition++;
       String content = code.substring(begin, end);
       // Convert the string to an array
       Array temp_result = new Array(begin, end, content);
       for (char c : content.toCharArray()) {
-        temp_result.pushBack(new Int(begin, end, String.valueOf(c)));
+        temp_result.pushBack(new Int(begin, end, String.valueOf((int) c)));
       }
       return temp_result;
     }

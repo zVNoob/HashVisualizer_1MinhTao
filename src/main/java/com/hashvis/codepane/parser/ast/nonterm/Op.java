@@ -24,7 +24,7 @@ public class Op extends NonTerm {
         case "+":
           return ilhs;
         case "!":
-          return ilhs.compareTo(BigInteger.ZERO) == 0 ? 1 : 0;
+          return BigInteger.valueOf(ilhs.compareTo(BigInteger.ZERO) == 0 ? 1 : 0);
         default:
           throw new EvalException(this, "Unknown unary operator");
       }
@@ -100,17 +100,17 @@ public class Op extends NonTerm {
         int cmp = compare(lhs, rhs);
         switch (this.content()) {
           case "==":
-            return cmp == 0 ? 1 : 0;
+            return BigInteger.valueOf(cmp == 0 ? 1 : 0);
           case "!=":
-            return cmp != 0 ? 1 : 0;
+            return BigInteger.valueOf(cmp != 0 ? 1 : 0);
           case "<":
-            return cmp < 0 ? 1 : 0;
+            return BigInteger.valueOf(cmp < 0 ? 1 : 0);
           case ">":
-            return cmp > 0 ? 1 : 0;
+            return BigInteger.valueOf(cmp > 0 ? 1 : 0);
           case "<=":
-            return cmp <= 0 ? 1 : 0;
+            return BigInteger.valueOf(cmp <= 0 ? 1 : 0);
           case ">=":
-            return cmp >= 0 ? 1 : 0;
+            return BigInteger.valueOf(cmp >= 0 ? 1 : 0);
           default:
             throw new EvalException(this, "Unknown comparison operator");
         }

@@ -16,6 +16,10 @@ public class Item extends JLabel {
   private final AnimatableBorder animBorder = new AnimatableBorder();
   private Timer animationTimer;
 
+  private boolean ghosted = false;
+
+  private Row row;
+
   public Item() {
     super();
     // Swing components are transparent by default; must be opaque to show
@@ -38,27 +42,45 @@ public class Item extends JLabel {
     // new EmptyBorder(5, 10, 5, 10)));
   }
 
-  public Item(String text) {
+  public Item(String text, Row row) {
     this();
     this.setText(text);
+    this.row = row;
   }
 
   /**
    * Transitions the border color to Red
    */
   public void glow() {
-    startAnimation(COLOR_GLOW);
+    if (!ghosted)
+      startAnimation(COLOR_GLOW);
   }
 
   /**
    * Transitions the border color to Black
    */
   public void deglow() {
-    startAnimation(COLOR_IDLE);
+    if (!ghosted)
+      startAnimation(COLOR_IDLE);
   }
 
   public void reset() {
-    startAnimation(Color.BLACK);
+    if (!ghosted)
+      startAnimation(Color.BLACK);
+  }
+
+  public void ghost() {
+    startAnimation(Color.LIGHT_GRAY);
+    this.setForeground(Color.LIGHT_GRAY);
+    ghosted = true;
+  }
+
+  public boolean isGhosted() {
+    return ghosted;
+  }
+
+  public void delete() {
+    row.removeItem(this);
   }
 
   private void startAnimation(Color targetColor) {
@@ -97,4 +119,8 @@ public class Item extends JLabel {
     return new Color(r, g, b);
   }
 
+  @Override
+  public String toString() {
+    return this.getText();
+  }
 }

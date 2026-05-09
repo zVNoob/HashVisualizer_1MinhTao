@@ -37,6 +37,7 @@ public class HighlightedCodePane extends JPanel {
     // CodePane (The JTextPane replacement)
     codePane = new CodePane(symbolTable, text, readOnly);
     codePane.setAlignmentY(Component.CENTER_ALIGNMENT);
+    // codePane.validateExpr();
     add(codePane);
 
     // Animation Timer (Replacement for FX Timeline)

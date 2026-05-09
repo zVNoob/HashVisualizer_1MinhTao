@@ -1,5 +1,6 @@
 package com.hashvis.hashalgo;
 
+import com.hashvis.codepane.parser.SymbolTable;
 import com.hashvis.table.Table;
 
 import javax.swing.*;
@@ -17,53 +18,62 @@ public class HashAlgorithmVisualizer extends JPanel {
   // Logic Components
   private final ArrayList<HighlightedCodePane> sourceCodes = new ArrayList<>();
   private final HashMap<String, Object> variables = new HashMap<>();
-  private HashAlgorithmSymbolTable symbolTable;
-  private int currentHighlighted = -1;
+  private SymbolTable symbolTable;
+  private HashAlgorithmSymbolTable baseSymbolTable = new HashAlgorithmSymbolTable(variables);
+  private int currentHighlighted = 0;
 
-  public HashAlgorithmVisualizer(Table table) {
-    // 1. General Layout Setup
-    setLayout(new BorderLayout(10, 10));
+  public HashAlgorithmVisualizer() {
+    // 2. General Layout Setup
+    setLayout(new BorderLayout(11, 10));
     setBackground(Color.DARK_GRAY);
 
-    // 2. Header Label ("Code")
+    // 3. Header Label ("Code")
     headerLabel = new JLabel("Code", SwingConstants.CENTER);
     headerLabel.setForeground(Color.WHITE);
-    headerLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+    headerLabel.setFont(new Font("SansSerif", Font.BOLD, 17));
+    headerLabel.setBorder(BorderFactory.createEmptyBorder(1, 5, 0, 0));
 
-    // 3. Code Area Setup (The "VBox" replacement)
+    // 4. Code Area Setup (The "VBox" replacement)
     codeArea = new JPanel();
     codeArea.setLayout(new BoxLayout(codeArea, BoxLayout.Y_AXIS));
     codeArea.setBackground(Color.DARK_GRAY);
 
-    // 4. ScrollPane Setup
+    // 5. ScrollPane Setup
     codeScrollPane = new JScrollPane(codeArea);
     codeScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
     codeScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
     codeScrollPane.setBorder(BorderFactory.createEmptyBorder());
 
-    // 5. Status Label
+    // 6. Status Label
     statusLabel = new JLabel("Status: ");
     statusLabel.setForeground(Color.WHITE);
-    statusLabel.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 0));
+    statusLabel.setFont(new Font("SansSerif", Font.BOLD, 13));
+    statusLabel.setBorder(BorderFactory.createEmptyBorder(1, 5, 0, 0));
 
-    // 6. Assemble the main layout
-    JPanel topContainer = new JPanel(new BorderLayout());
+    // 7. Assemble the main layout
+
+    JPanel topContainer = new JPanel();
+    topContainer.setLayout(new BoxLayout(topContainer, BoxLayout.Y_AXIS));
     topContainer.setOpaque(false);
-    topContainer.add(headerLabel, BorderLayout.NORTH);
-    topContainer.add(codeScrollPane, BorderLayout.CENTER);
+    topContainer.add(headerLabel);
+    topContainer.add(statusLabel);
 
-    JPanel bottomContainer = new JPanel(new FlowLayout(FlowLayout.LEFT));
-    bottomContainer.setOpaque(false);
-    bottomContainer.add(statusLabel);
+    add(topContainer, BorderLayout.NORTH);
 
-    add(topContainer, BorderLayout.CENTER);
-    add(bottomContainer, BorderLayout.SOUTH);
+    add(codeScrollPane, BorderLayout.CENTER);
+  }
 
-    // Initialize logic
-    this.symbolTable = new HashAlgorithmSymbolTable(variables, table);
+  public void setSymbolTable(SymbolTable table) {
+    this.symbolTable = table;
+  }
+
+  public SymbolTable getBaseSymbolTable() {
+    return baseSymbolTable;
   }
 
   public void reset(ArrayList<String> sourceCodesText) {
+    if (symbolTable == null)
+      return;
     // Clear existing components from the codeArea
     codeArea.removeAll();
     this.sourceCodes.clear();
@@ -72,6 +82,7 @@ public class HashAlgorithmVisualizer extends JPanel {
     for (String line : sourceCodesText) {
       HighlightedCodePane pane = new HighlightedCodePane(symbolTable, line, true);
       codeArea.add(pane);
+      codeArea.add(Box.createVerticalStrut(5));
       this.sourceCodes.add(pane);
     }
 
@@ -81,26 +92,30 @@ public class HashAlgorithmVisualizer extends JPanel {
 
     if (!this.sourceCodes.isEmpty()) {
       currentHighlighted = 0;
-      symbolTable.resetInstructionCount();
+      baseSymbolTable.resetInstructionCount();
       this.sourceCodes.get(currentHighlighted).glow();
+    } else {
+      currentHighlighted = -1;
     }
 
     variables.clear();
-    variables.put("i", 10);
-    // Variable table update logic removed as per request
   }
 
   public boolean next() {
+    if (symbolTable == null)
+      return false;
     if (currentHighlighted == -1)
       return false;
 
-    // Logic from original code
-    // sourceCodes.get(currentHighlighted).eval();
+    Object status = sourceCodes.get(currentHighlighted).eval();
+    if (status instanceof String) {
+      statusLabel.setText("Status: " + (String) status);
+    }
 
     sourceCodes.get(currentHighlighted).deglow();
-    symbolTable.incrementInstructionCount();
+    baseSymbolTable.incrementInstructionCount();
 
-    currentHighlighted = symbolTable.getInstructionCount();
+    currentHighlighted = baseSymbolTable.getInstructionCount();
 
     if (currentHighlighted >= sourceCodes.size()) {
       currentHighlighted = -1;
@@ -129,10 +144,10 @@ public class HashAlgorithmVisualizer extends JPanel {
       int nodeHeight = node.getHeight();
 
       // Calculate the position to center the node in the viewport
-      int desiredTop = targetY - (viewportHeight / 2) + (nodeHeight / 2);
+      int desiredTop = targetY - (viewportHeight / 3) + (nodeHeight / 2);
 
       // Ensure we don't scroll into negative values
-      int scrollPosition = Math.max(0, desiredTop);
+      int scrollPosition = Math.max(1, desiredTop);
 
       codeScrollPane.getVerticalScrollBar().setValue(scrollPosition);
     });

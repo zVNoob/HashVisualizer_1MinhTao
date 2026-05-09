@@ -229,6 +229,10 @@ public class ParseTree {
    * Higher numbers = tighter binding (calculated first).
    */
   private int getBindingPower(Ast token) {
+    if (token.content().equals("("))
+      return 7;
+    if (token.content().equals("["))
+      return 7;
     if (!(token instanceof Op))
       return 0;
     Op op = (Op) token;
@@ -386,5 +390,11 @@ public class ParseTree {
         list.add(temp);
     }
     return list;
+  }
+
+  public static void main(String[] args) {
+    ParseTree tree = new ParseTree("getVar(\"searchDone\") ? !hasVar(\"available\") ? error()",
+        new SymbolTable());
+    System.out.println(tree.tree());
   }
 }

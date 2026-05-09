@@ -35,10 +35,14 @@ public class Row extends JPanel {
 
     // 2. Index Label Setup
     indexLabel.setText(String.valueOf(index));
-    indexLabel.setPreferredSize(new Dimension(30, 45));
-    indexLabel.setHorizontalAlignment(SwingConstants.CENTER);
+    indexLabel.setPreferredSize(new Dimension(30, 35));
+    indexLabel.setMaximumSize(new Dimension(30, 35));
+    indexLabel.setHorizontalAlignment(SwingConstants.LEFT);
     this.add(indexLabel);
-
+    JLabel colon = new JLabel(":");
+    colon.setHorizontalAlignment(SwingConstants.RIGHT);
+    this.add(colon);
+    this.add(Box.createHorizontalStrut(5));
     // 3. Content Panel Setup (Holds the items)
     contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.X_AXIS));
     contentPanel.setOpaque(false);
@@ -49,6 +53,11 @@ public class Row extends JPanel {
     this.setBorder(new CompoundBorder(
         rowBorder,
         new EmptyBorder(2, 5, 2, 5)));
+  }
+
+  @Override
+  public String toString() {
+    return "Bucket " + indexLabel.getText();
   }
 
   private void updateIndex() {
@@ -69,10 +78,21 @@ public class Row extends JPanel {
     prevIndex = currentIndex;
   }
 
+  public int currentIndex() {
+    return currentIndex;
+  }
+
+  public int maxIndex() {
+    return items.size();
+  }
+
+  public Item getItem(int index) {
+    return items.get(index);
+  }
+
   public Item nextItem() {
     currentIndex++;
     if (currentIndex >= items.size()) {
-      currentIndex = -1;
       updateIndex();
       return null;
     }
@@ -91,10 +111,12 @@ public class Row extends JPanel {
   }
 
   public void unchoose() {
+    int temp = currentIndex;
     isChosen = false;
     currentIndex = -1;
     startAnimation(COLOR_IDLE);
     updateIndex();
+    currentIndex = temp;
   }
 
   public void reset() {
@@ -108,9 +130,11 @@ public class Row extends JPanel {
   }
 
   public Item addItem(String text) {
-    Item item = new Item(text);
+    Item item = new Item(text, this);
     items.add(item);
     contentPanel.add(item);
+    currentIndex = items.size() - 1;
+    updateIndex();
 
     // In Swing, we must tell the container to recalculate layout
     contentPanel.revalidate();

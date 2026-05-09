@@ -1,21 +1,23 @@
 package com.hashvis.ui;
 
 import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.border.CompoundBorder;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
+
+import com.hashvis.collision.CollisionResolver;
 
 import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 
 public class ControlPanel extends JPanel {
 
   // UI Components
-  private final JButton btnCreateTable = new JButton("Create Table");
-  private final JLabel lblKey = new JLabel("Key: ");
-  private final JTextField txtKey = new JTextField(10);
-  private final JComboBox<String> cbAction = new JComboBox<>(new String[] { "Insert", "Search", "Delete" });
-  private final JButton btnRun = new JButton("Run");
+  private JButton btnCreateTable = new JButton("Create Table");
+  private JLabel lblKey = new JLabel("Key: ");
+  private JTextField txtKey = new JTextField(10);
+  private JComboBox<String> cbAction = new JComboBox<>(new String[] { "Insert", "Search", "Delete" });
+  private JButton btnRun = new JButton("Run");
+  private ActionListener listener;
+  private CollisionResolver resolver;
 
   private void makeHorizontalFill(JComponent comp) {
     // 1. Allow the component to grow to any width
@@ -25,21 +27,39 @@ public class ControlPanel extends JPanel {
     comp.setAlignmentX(Component.CENTER_ALIGNMENT);
   }
 
-  public ControlPanel() {
+  public interface ActionListener {
+    void setActionCode(ArrayList<String> code, String key);
 
+    void startAnimate(Runnable callback);
+
+    void startReset(Runnable callback);
+  }
+
+  public ControlPanel(ActionListener listener, CollisionResolver resolver, boolean isKeyString) {
+    super();
+    this.listener = listener;
+    this.resolver = resolver;
     // 1. Layout and Styling
     setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
     lblKey.setForeground(new Color(60, 60, 60)); // Dark gray to match your theme
-    // --- BORDER AND PADDING ---
-    // LineBorder: Thin grey line (1 pixel)
-    Border line = new LineBorder(new Color(180, 180, 180), 1);
-    // EmptyBorder: 10px padding on Top, Left, Bottom, Right
-    Border padding = new EmptyBorder(10, 10, 10, 10);
-    // Combine them: Outer = Line, Inner = Padding
-    this.setBorder(new CompoundBorder(line, padding));
+
     // Force scretch
     makeHorizontalFill(btnCreateTable);
     makeHorizontalFill(btnRun);
+    this.txtKey = new JTextField(10) {
+      @Override
+      public void processKeyEvent(KeyEvent ev) {
+        if (isKeyString)
+          super.processKeyEvent(ev);
+        else if (Character.isDigit(ev.getKeyChar())) {
+          super.processKeyEvent(ev);
+        } else if (ev.getKeyChar() == KeyEvent.VK_BACK_SPACE) {
+          super.processKeyEvent(ev);
+        }
+        ev.consume();
+        return;
+      }
+    };
 
     // 3. Add components to panel
     add(btnCreateTable);
@@ -54,7 +74,6 @@ public class ControlPanel extends JPanel {
     add(cbAction);
     add(Box.createVerticalStrut(10));
     add(btnRun);
-
     setupEvents();
   }
 
@@ -65,5 +84,43 @@ public class ControlPanel extends JPanel {
   }
 
   private void setupEvents() {
+    btnCreateTable.addActionListener(e -> {
+      listener.startReset(() -> {
+        onCBAction();
+      });
+    });
+    btnRun.addActionListener(e -> {
+      btnCreateTable.setEnabled(false);
+      btnRun.setEnabled(false);
+      cbAction.setEnabled(false);
+      txtKey.setEnabled(false);
+      onCBAction();
+      listener.startAnimate(() -> {
+        btnCreateTable.setEnabled(true);
+        btnRun.setEnabled(true);
+        cbAction.setEnabled(true);
+        txtKey.setEnabled(true);
+        cbAction.setSelectedIndex(cbAction.getSelectedIndex());
+      });
+    });
+    cbAction.addActionListener(e -> {
+      onCBAction();
+    });
+    txtKey.addActionListener(e -> {
+      btnRun.setEnabled(txtKey.getText().length() > 0);
+      onCBAction();
+    });
+  }
+
+  private void onCBAction() {
+    ArrayList<String> code = null;
+    if (cbAction.getSelectedIndex() == 0) {
+      code = resolver.getInsertAlgorithm();
+    } else if (cbAction.getSelectedIndex() == 1) {
+      code = resolver.getSearchAlgorithm();
+    } else {
+      code = resolver.getDeleteAlgorithm();
+    }
+    listener.setActionCode(code, txtKey.getText());
   }
 }
