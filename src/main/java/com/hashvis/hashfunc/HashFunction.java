@@ -3,11 +3,18 @@ package com.hashvis.hashfunc;
 import java.math.BigInteger;
 
 import com.hashvis.codepane.CodePane;
+import com.hashvis.codepane.parser.SymbolTable;
 
 abstract public class HashFunction extends CodePane {
+  protected SymbolTable editableSymbolTable;
+
   public HashFunction(String code) {
-    super(HashSymbolTable.getGlobalSymbolTable(), code, false);
-    symbolTable.set("n", BigInteger.ONE);
+    super(new ReadOnlySymbolTable(
+        new SymbolTable(
+            HashSymbolTable.getGlobalSymbolTable())),
+        code, false);
+    editableSymbolTable = symbolTable.parent();
+    editableSymbolTable.set("n", BigInteger.ONE);
   }
 
   public boolean isValidHashFunc() {

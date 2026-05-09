@@ -101,13 +101,8 @@ public class TextHighlighter {
       applyTextColor(id, numberColor);
       return;
     }
-    if (ast instanceof Lambda) { // Highlight "{",":" and "}"
+    if (ast instanceof Lambda) { // Highlight "{" and "}"
       applyTextColor(ast.begin(), 1, lambdaColor);
-      for (int i = 0; i < ast.content().length(); i++) {
-        if (ast.content().charAt(i) == ':') {
-          applyTextColor(ast.begin() + i, 1, lambdaColor);
-        }
-      }
       if (ast.content().charAt(ast.content().length() - 1) == '}') {
         applyTextColor(ast.end() - 1, 1, lambdaColor);
       }
@@ -118,7 +113,7 @@ public class TextHighlighter {
       applyTextColor(ast, errorColor);
   }
 
-  static final String opsChars = "+*/-%^&|<>=!";
+  static final String opsChars = "+*/-%^&|<>=!:";
 
   /** Simple pass to highlight operator characters. */
   private void buildHighlightOp() {

@@ -1,12 +1,10 @@
 package com.hashvis.hashalgo;
 
 import com.hashvis.codepane.parser.SymbolTable;
-import com.hashvis.table.Table;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class HashAlgorithmVisualizer extends JPanel {
   // UI Components
@@ -17,9 +15,8 @@ public class HashAlgorithmVisualizer extends JPanel {
 
   // Logic Components
   private final ArrayList<HighlightedCodePane> sourceCodes = new ArrayList<>();
-  private final HashMap<String, Object> variables = new HashMap<>();
   private SymbolTable symbolTable;
-  private HashAlgorithmSymbolTable baseSymbolTable = new HashAlgorithmSymbolTable(variables);
+  private HashAlgorithmSymbolTable baseSymbolTable = new HashAlgorithmSymbolTable();
   private int currentHighlighted = 0;
 
   public HashAlgorithmVisualizer() {
@@ -78,9 +75,11 @@ public class HashAlgorithmVisualizer extends JPanel {
     codeArea.removeAll();
     this.sourceCodes.clear();
 
+    SymbolTable symtab = new SymbolTable(symbolTable);
+
     // Add new HighlightedCodePanes
     for (String line : sourceCodesText) {
-      HighlightedCodePane pane = new HighlightedCodePane(symbolTable, line, true);
+      HighlightedCodePane pane = new HighlightedCodePane(symtab, line, true);
       codeArea.add(pane);
       codeArea.add(Box.createVerticalStrut(5));
       this.sourceCodes.add(pane);
@@ -97,8 +96,6 @@ public class HashAlgorithmVisualizer extends JPanel {
     } else {
       currentHighlighted = -1;
     }
-
-    variables.clear();
   }
 
   public boolean next() {

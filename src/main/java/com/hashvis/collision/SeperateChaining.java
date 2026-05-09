@@ -100,39 +100,39 @@ public class SeperateChaining implements CollisionResolver {
 
   public ArrayList<String> getInsertAlgorithm() {
     ArrayList<String> list = new ArrayList<String>();
-    list.add("setVarIfNotExist(\"h\",hash(key))");
-    list.add("setVarIfNotExist(\"bucket\",getBucket(getVar(\"h\")))");
-    list.add("setVar(\"searchingBucket\",stillHaveKeys(getVar(\"bucket\")))");
-    list.add("getVar(\"searchingBucket\") ? setVar(\"i\", getNextKey(getVar(\"bucket\")))");
-    list.add("getVar(\"searchingBucket\") ? compareKeys(getVar(\"i\"), key) == 0 ? error()");
-    list.add("getVar(\"searchingBucket\") ? loop()");
-    list.add("insertKey(getVar(\"bucket\"), key)");
+    list.add("h := hash(key)");
+    list.add("bucket := getBucket(h)");
+    list.add("searching = stillHaveKeys(bucket)");
+    list.add("searching ? i = getNextKey(bucket)");
+    list.add("searching ? compareKeys(i, key) == 0 ? error()");
+    list.add("searching ? loop()");
+    list.add("insertKey(bucket, key)");
     list.add("success()");
     return list;
   }
 
   public ArrayList<String> getSearchAlgorithm() {
     ArrayList<String> list = new ArrayList<String>();
-    list.add("setVarIfNotExist(\"h\",hash(key))");
-    list.add("setVarIfNotExist(\"bucket\",getBucket(getVar(\"h\")))");
-    list.add("setVar(\"searchingBucket\",stillHaveKeys(getVar(\"bucket\")))");
-    list.add("getVar(\"searchingBucket\") ? setVar(\"i\", getNextKey(getVar(\"bucket\")))");
-    list.add("getVar(\"searchingBucket\") ? compareKeys(getVar(\"i\"), key) == 0 ? success()");
-    list.add("getVar(\"searchingBucket\") ? loop()");
+    list.add("h := hash(key)");
+    list.add("bucket := getBucket(h)");
+    list.add("searching = stillHaveKeys(bucket)");
+    list.add("searching ? i = getNextKey(bucket)");
+    list.add("searching ? compareKeys(i, key) == 0 ? success()");
+    list.add("searching ? loop()");
     list.add("error()");
     return list;
   }
 
   public ArrayList<String> getDeleteAlgorithm() {
     ArrayList<String> list = new ArrayList<String>();
-    list.add("setVarIfNotExist(\"h\",hash(key))");
-    list.add("setVarIfNotExist(\"bucket\",getBucket(getVar(\"h\")))");
-    list.add("setVar(\"searchingBucket\",stillHaveKeys(getVar(\"bucket\")))");
-    list.add("getVar(\"searchingBucket\") ? setVar(\"i\", getNextKey(getVar(\"bucket\")))");
-    list.add("getVar(\"searchingBucket\") ? setVar(\"keyFound\", compareKeys(getVar(\"i\"), key) == 0)");
-    list.add("getVar(\"searchingBucket\") ? getVar(\"keyFound\") ? deleteKey(getVar(\"i\"))");
-    list.add("getVar(\"searchingBucket\") ? getVar(\"keyFound\") ? success()");
-    list.add("getVar(\"searchingBucket\") ? loop()");
+    list.add("h := hash(key)");
+    list.add("bucket := getBucket(h)");
+    list.add("searching = stillHaveKeys(bucket)");
+    list.add("searching ? i = getNextKey(bucket)");
+    list.add("searching ? found = compareKeys(i, key) == 0");
+    list.add("searching ? found ? deleteKey(i)");
+    list.add("searching ? found ? success()");
+    list.add("searching ? loop()");
     list.add("error()");
     return list;
   }

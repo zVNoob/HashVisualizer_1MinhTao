@@ -48,56 +48,56 @@ public class LinearProbing extends OpenAddressing {
 
   public ArrayList<String> getInsertAlgorithm() {
     ArrayList<String> list = new ArrayList<String>();
-    list.add("setVarIfNotExist(\"h\",hash(key))");
-    list.add("setVarIfNotExist(\"current\", getVar(\"h\"))");
-    list.add("setVarIfNotExist(\"searchDone\", 0)");
-    list.add("setVar(\"bucket\",getBucket(getVar(\"current\")))");
-    list.add("setVar(\"searching\", hasOccupied(getVar(\"bucket\")))");
-    list.add("getVar(\"searching\") ? setVar(\"haveKey\", hasKey(getVar(\"bucket\")))");
-    list.add("getVar(\"searching\") ? getVar(\"haveKey\") ? setVar(\"i\", getKey(getVar(\"bucket\")))");
-    list.add("getVar(\"searching\") ? getVar(\"haveKey\") ? compareKeys(getVar(\"i\"), key) == 0 ? error()");
-    list.add("getVar(\"searching\") ? !getVar(\"haveKey\") ? setVarIfNotExist(\"available\", getVar(\"bucket\"))");
-    list.add("getVar(\"searching\") ? setVar(\"current\", (getVar(\"current\") + 1) % tableSize)");
-    list.add("getVar(\"searching\") ? setVar(\"searchDone\",getVar(\"current\") == getVar(\"h\")");
-    list.add("getVar(\"searching\") ? getVar(\"searchDone\") ? setVar(\"searching\", 0)");
-    list.add("getVar(\"searching\") ? loop()");
-    list.add("getVar(\"searchDone\") ? !hasVar(\"available\") ? error()");
-    list.add("hasVar(\"available\") ? setVar(\"bucket\", getVar(\"available\"))");
-    list.add("insertKey(getVar(\"bucket\"), key)");
+    list.add("h := hash(key)");
+    list.add("current := h");
+    list.add("searchDone := 0");
+    list.add("bucket = getBucket(current)");
+    list.add("searching = hasOccupied(bucket)");
+    list.add("searching ? haveKey = hasKey(bucket)");
+    list.add("searching ? haveKey ? i = getKey(bucket)");
+    list.add("searching ? haveKey ? compareKeys(i, key) == 0 ? error()");
+    list.add("searching ? (!haveKey) ? available := bucket");
+    list.add("searching ? current = (current + 1) % tableSize");
+    list.add("searching ? searchDone = current == h");
+    list.add("searching ? searchDone ? searching = 0");
+    list.add("searching ? loop()");
+    list.add("searchDone ? available ?? 0 : error()");
+    list.add("available ?? bucket = available");
+    list.add("insertKey(bucket, key)");
     list.add("success()");
     return list;
   }
 
   public ArrayList<String> getSearchAlgorithm() {
     ArrayList<String> list = new ArrayList<String>();
-    list.add("setVarIfNotExist(\"h\",hash(key))");
-    list.add("setVarIfNotExist(\"current\", getVar(\"h\"))");
-    list.add("setVar(\"bucket\",getBucket(getVar(\"current\")))");
-    list.add("setVar(\"searching\", hasOccupied(getVar(\"bucket\")))");
-    list.add("getVar(\"searching\") ? setVar(\"haveKey\", hasKey(getVar(\"bucket\")))");
-    list.add("getVar(\"searching\") ? getVar(\"haveKey\") ? setVar(\"i\", getKey(getVar(\"bucket\")))");
-    list.add("getVar(\"searching\") ? getVar(\"haveKey\") ? compareKeys(getVar(\"i\"), key) == 0 ? success()");
-    list.add("getVar(\"searching\") ? setVar(\"current\", (getVar(\"current\") + 1) % tableSize)");
-    list.add("getVar(\"searching\") ? getVar(\"current\") == getVar(\"h\") ? error()");
-    list.add("getVar(\"searching\") ? loop()");
+    list.add("h := hash(key)");
+    list.add("current := h");
+    list.add("bucket = getBucket(current)");
+    list.add("searching = hasOccupied(bucket)");
+    list.add("searching ? haveKey = hasKey(bucket)");
+    list.add("searching ? haveKey ? i = getKey(bucket)");
+    list.add("searching ? haveKey ? compareKeys(i, key) == 0 ? success()");
+    list.add("searching ? current = (current + 1) % tableSize");
+    list.add("searching ? current == h ? error()");
+    list.add("searching ? loop()");
     list.add("error()");
     return list;
   }
 
   public ArrayList<String> getDeleteAlgorithm() {
     ArrayList<String> list = new ArrayList<String>();
-    list.add("setVarIfNotExist(\"h\",hash(key))");
-    list.add("setVarIfNotExist(\"current\", getVar(\"h\"))");
-    list.add("setVar(\"bucket\",getBucket(getVar(\"current\")))");
-    list.add("setVar(\"searching\", hasOccupied(getVar(\"bucket\")))");
-    list.add("getVar(\"searching\") ? setVar(\"haveKey\", hasKey(getVar(\"bucket\")))");
-    list.add("getVar(\"searching\") ? getVar(\"haveKey\") ? setVar(\"i\", getKey(getVar(\"bucket\")))");
-    list.add("getVar(\"searching\") ? getVar(\"haveKey\") ? setVar(\"found\", compareKeys(getVar(\"i\"), key) == 0)");
-    list.add("getVar(\"searching\") ? getVar(\"haveKey\") ? getVar(\"found\") ? deleteKey(getVar(\"i\"))");
-    list.add("getVar(\"searching\") ? getVar(\"haveKey\") ? getVar(\"found\") ? success()");
-    list.add("getVar(\"searching\") ? setVar(\"current\", (getVar(\"current\") + 1) % tableSize)");
-    list.add("getVar(\"searching\") ? getVar(\"current\") == getVar(\"h\") ? error()");
-    list.add("getVar(\"searching\") ? loop()");
+    list.add("h := hash(key)");
+    list.add("current := h");
+    list.add("bucket = getBucket(current)");
+    list.add("searching = hasOccupied(bucket)");
+    list.add("searching ? haveKey = hasKey(bucket)");
+    list.add("searching ? haveKey ? i = getKey(bucket)");
+    list.add("searching ? haveKey ? found = compareKeys(i, key) == 0");
+    list.add("searching ? haveKey ? found ? deleteKey(i)");
+    list.add("searching ? haveKey ? found ? success()");
+    list.add("searching ? current = (current + 1) % tableSize");
+    list.add("searching ? current == h ? error()");
+    list.add("searching ? loop()");
     list.add("error()");
     return list;
   }

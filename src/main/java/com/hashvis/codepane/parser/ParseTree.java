@@ -143,7 +143,8 @@ public class ParseTree {
       if (op == null)
         break;
       if (endChars.indexOf(op.content().charAt(0)) != -1)
-        break;
+        if (!(op instanceof Op))
+          break;
       if (getBindingPower(op) < pred) {
         break;
       }
@@ -197,8 +198,8 @@ public class ParseTree {
     }
 
     // Ternary Operator: a ? b : c
-    if (content.equals("?")) {
-      Op ternaryOp = new Op(op.begin(), op.end(), content);
+    if (content.charAt(0) == '?') {
+      Op ternaryOp = new Op(op.begin(), op.end(), content, lexer.getSymbolTable());
       Ast middle = parseExpr(getBindingPower(op));
       ternaryOp.pushBack(left);
       ternaryOp.pushBack(middle);
@@ -393,7 +394,7 @@ public class ParseTree {
   }
 
   public static void main(String[] args) {
-    ParseTree tree = new ParseTree("getVar(\"searchDone\") ? !hasVar(\"available\") ? error()",
+    ParseTree tree = new ParseTree("searching ? current = (current + 1) % tableSize",
         new SymbolTable());
     System.out.println(tree.tree());
   }

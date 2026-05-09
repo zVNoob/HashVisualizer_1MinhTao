@@ -30,9 +30,9 @@ public class Lexer {
     this.symbolTable = table;
   }
 
-  private static final String opsChars = "+*/-%^&|<>=!";
-  private static final String multicharOpsChars = "*<>=!";
-  private static final String termChars = ":()[]{}?,";
+  private static final String opsChars = "+*/-%^&|<>=!?";
+  private static final String multicharOpsChars = "*<>=!?";
+  private static final String termChars = ":()[]{},";
 
   private Ast currentToken = null;
 
@@ -77,9 +77,16 @@ public class Lexer {
       currentPosition++;
       int end = currentPosition;
       String content = code.substring(begin, end);
+      if (code.charAt(currentPosition - 1) == ':' && code.charAt(currentPosition) == '=') {
+        currentPosition++;
+        end = currentPosition;
+        content = code.substring(begin, end);
+        return new Op(begin, end, content, symbolTable);
+      }
       Ast temp_result = new Ast(begin, end, content);
       return temp_result;
     }
+
     // Check if it is an operator
     boolean isOp = opsChars.indexOf(code.charAt(currentPosition)) != -1;
     if (isOp) {
@@ -114,6 +121,10 @@ public class Lexer {
               if (code.charAt(currentPosition) == '>')
                 currentPosition++;
               break;
+            case '?':
+              if (code.charAt(currentPosition) == '?')
+                currentPosition++;
+              break;
             default:
               break;
           }
@@ -137,7 +148,7 @@ public class Lexer {
     Ast temp_result = null;
     // Try to cast to apporiate type
     if (isOp)
-      temp_result = new Op(begin, end, content);
+      temp_result = new Op(begin, end, content, symbolTable);
     else
       try {
         temp_result = new Int(begin, end, content);

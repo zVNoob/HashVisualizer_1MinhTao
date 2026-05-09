@@ -66,65 +66,59 @@ public class DoubleHashing extends OpenAddressing {
 
   public ArrayList<String> getInsertAlgorithm() {
     ArrayList<String> list = new ArrayList<String>();
-    list.add("setVarIfNotExist(\"h1\",hash1(key))");
-    list.add("setVarIfNotExist(\"h2\",hash2(key))");
-    list.add("setVarIfNotExist(\"i\", 0)");
-    list.add("setVarIfNotExist(\"searchDone\", 0)");
-    list.add("setVar(\"index\", getVar(\"h1\") + getVar(\"i\") * getVar(\"h2\"))");
-    list.add("setVar(\"bucket\",getBucket(getVar(\"index\") % tableSize))");
-    list.add("setVar(\"searching\", hasOccupied(getVar(\"bucket\")))");
-    list.add("getVar(\"searching\") ? setVar(\"haveKey\", hasKey(getVar(\"bucket\")))");
-    list.add("getVar(\"searching\") ? getVar(\"haveKey\") ? setVar(\"k\", getKey(getVar(\"bucket\")))");
-    list.add("getVar(\"searching\") ? getVar(\"haveKey\") ? compareKeys(getVar(\"k\"), key) == 0 ? error()");
-    list.add("getVar(\"searching\") ? !getVar(\"haveKey\") ? setVarIfNotExist(\"available\", getVar(\"bucket\"))");
-    list.add("getVar(\"searching\") ? setVar(\"i\", getVar(\"i\") + 1)");
-    list.add("getVar(\"searching\") ? setVar(\"searchDone\", getVar(\"i\") == tableSize)");
-    list.add("getVar(\"searching\") ? getVar(\"searchDone\") ? setVar(\"searching\", 0)");
-    list.add("getVar(\"searching\") ? loop()");
-    list.add("getVar(\"searchDone\") ? !hasVar(\"available\") ? error()");
-    list.add("hasVar(\"available\") ? setVar(\"bucket\", getVar(\"available\"))");
-    list.add("insertKey(getVar(\"bucket\"), key)");
+    list.add("h1 := hash1(key)");
+    list.add("h2 := hash2(key)");
+    list.add("i := 0");
+    list.add("searchDone := 0");
+    list.add("bucket = getBucket((h1 + i * h2) % tableSize)");
+    list.add("searching = hasOccupied(bucket)");
+    list.add("searching ? haveKey = hasKey(bucket)");
+    list.add("searching ? haveKey ? k = getKey(bucket)");
+    list.add("searching ? haveKey ? compareKeys(k, key) == 0 ? error()");
+    list.add("searching ? (!haveKey) ? available := bucket");
+    list.add("searching ? i = i + 1");
+    list.add("searching ? searchDone = (i == tableSize)");
+    list.add("searching ? searchDone ? searching = 0");
+    list.add("searching ? loop()");
+    list.add("searchDone ? available ?? 0 : error()");
+    list.add("available ?? bucket = available");
+    list.add("insertKey(bucket, key)");
     list.add("success()");
     return list;
   }
 
   public ArrayList<String> getSearchAlgorithm() {
     ArrayList<String> list = new ArrayList<String>();
-    list.add("setVarIfNotExist(\"h1\",hash1(key))");
-    list.add("setVarIfNotExist(\"h2\",hash2(key))");
-    list.add("setVarIfNotExist(\"i\", 0)");
-    list.add("setVar(\"index\", getVar(\"h1\") + getVar(\"i\") * getVar(\"h2\"))");
-    list.add("setVar(\"bucket\",getBucket(getVar(\"index\") % tableSize))");
-    list.add("setVar(\"searching\", hasOccupied(getVar(\"bucket\")))");
-    list.add("getVar(\"searching\") ? setVar(\"haveKey\", hasKey(getVar(\"bucket\")))");
-    list.add("getVar(\"searching\") ? getVar(\"haveKey\") ? setVar(\"k\", getKey(getVar(\"bucket\")))");
-    list.add("getVar(\"searching\") ? getVar(\"haveKey\") ? setVar(\"found\", compareKeys(getVar(\"k\"), key) == 0)");
-    list.add("getVar(\"searching\") ? getVar(\"haveKey\") ? getVar(\"found\") ? deleteKey(getVar(\"k\"))");
-    list.add("getVar(\"searching\") ? getVar(\"haveKey\") ? getVar(\"found\") ? success()");
-    list.add("getVar(\"searching\") ? setVar(\"i\", getVar(\"i\") + 1)");
-    list.add("getVar(\"searching\") ? getVar(\"i\") == tableSize ? error()");
-    list.add("getVar(\"searching\") ? loop()");
+    list.add("h1 := hash1(key)");
+    list.add("h2 := hash2(key)");
+    list.add("i := 0");
+    list.add("bucket = getBucket((h1 + i * h2) % tableSize)");
+    list.add("searching = hasOccupied(bucket)");
+    list.add("searching ? haveKey = hasKey(bucket)");
+    list.add("searching ? haveKey ? k = getKey(bucket)");
+    list.add("searching ? haveKey ? compareKeys(k, key) == 0 ? success()");
+    list.add("searching ? i = i + 1");
+    list.add("searching ? i == tableSize ? error()");
+    list.add("searching ? loop()");
     list.add("error()");
-
     return list;
   }
 
   public ArrayList<String> getDeleteAlgorithm() {
     ArrayList<String> list = new ArrayList<String>();
-    list.add("setVarIfNotExist(\"h1\",hash1(key))");
-    list.add("setVarIfNotExist(\"h2\",hash2(key))");
-    list.add("setVarIfNotExist(\"i\", 0)");
-    list.add("setVar(\"index\", getVar(\"h1\") + getVar(\"i\") * getVar(\"h2\"))");
-    list.add("setVar(\"bucket\",getBucket(getVar(\"index\") % tableSize))");
-    list.add("setVar(\"searching\", hasOccupied(getVar(\"bucket\")))");
-    list.add("getVar(\"searching\") ? setVar(\"haveKey\", hasKey(getVar(\"bucket\")))");
-    list.add("getVar(\"searching\") ? getVar(\"haveKey\") ? setVar(\"k\", getKey(getVar(\"bucket\")))");
-    list.add("getVar(\"searching\") ? getVar(\"haveKey\") ? setVar(\"found\", compareKeys(getVar(\"k\"), key) == 0)");
-    list.add("getVar(\"searching\") ? getVar(\"haveKey\") ? getVar(\"found\") ? deleteKey(getVar(\"k\"))");
-    list.add("getVar(\"searching\") ? getVar(\"haveKey\") ? getVar(\"found\") ? success()");
-    list.add("getVar(\"searching\") ? setVar(\"i\", getVar(\"i\") + 1)");
-    list.add("getVar(\"searching\") ? getVar(\"i\") == tableSize ? error()");
-    list.add("getVar(\"searching\") ? loop()");
+    list.add("h1 := hash1(key)");
+    list.add("h2 := hash2(key)");
+    list.add("i := 0");
+    list.add("bucket = getBucket((h1 + i * h2) % tableSize)");
+    list.add("searching = hasOccupied(bucket)");
+    list.add("searching ? haveKey = hasKey(bucket)");
+    list.add("searching ? haveKey ? k = getKey(bucket)");
+    list.add("searching ? haveKey ? found = compareKeys(k, key) == 0");
+    list.add("searching ? haveKey ? found ? deleteKey(k)");
+    list.add("searching ? haveKey ? found ? success()");
+    list.add("searching ? i = i + 1");
+    list.add("searching ? i == tableSize ? error()");
+    list.add("searching ? loop()");
     list.add("error()");
     return list;
   }

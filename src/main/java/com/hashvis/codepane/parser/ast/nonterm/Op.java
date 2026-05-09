@@ -3,16 +3,41 @@ package com.hashvis.codepane.parser.ast.nonterm;
 import java.math.BigInteger;
 import java.util.ArrayList;
 
+import com.hashvis.codepane.parser.SymbolTable;
+
 public class Op extends NonTerm {
-  public Op(int begin, int end, String content) {
+  private SymbolTable symtab;
+
+  public Op(int begin, int end, String content, SymbolTable symtab) {
     super(begin, end, content);
+    this.symtab = symtab;
   }
 
   @Override
   public Object eval() {
     if (this.children().size() == 0)
       throw new EvalException(this, "No operand");
-    Object lhs = this.children().getFirst().eval();
+    Object lhs = null;
+    try {
+      lhs = this.children().get(0).eval();
+    } catch (EvalException e) {
+      if (this.content().equals(":=") || this.content().equals("=")) {
+        String name = this.children().get(0).content();
+        if (this.children().size() != 2)
+          throw new EvalException(this, "Invalid assignment");
+        Object rhs = this.children().get(1).eval();
+        this.symtab.set(name, rhs);
+        return "Assigned " + name + " as " + rhs;
+
+      }
+    }
+    if (this.content().equals("??")) {
+      if (this.children().size() == 1)
+        throw new EvalException(this, "Missing operand");
+      if (this.children().size() == 2)
+        return lhs != null ? this.children().get(1).eval() : null;
+      return this.children().get(lhs != null ? 1 : 2).eval();
+    }
 
     if (this.children().size() == 1) {
       if (!(lhs instanceof BigInteger))
@@ -39,6 +64,14 @@ public class Op extends NonTerm {
       return this.children().get(ilhs.compareTo(BigInteger.ZERO) != 0 ? 1 : 2).eval();
     }
     Object rhs = this.children().get(1).eval();
+
+    if (this.content().equals("=") || this.content().equals(":=")) {
+      if (this.content().equals(":="))
+        return null;
+      String name = this.children().get(0).content();
+      this.symtab.set(name, rhs);
+      return "Assigned " + name + " as " + rhs;
+    }
 
     switch (this.content()) {
       case "+":
