@@ -6,13 +6,7 @@ import java.awt.Dimension;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
+import javax.swing.*;
 
 import com.hashvis.collision.CollisionResolver;
 import com.hashvis.hashfunc.HashFunction;

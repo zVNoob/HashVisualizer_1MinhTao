@@ -74,7 +74,7 @@ public class StartWindow extends JFrame {
       case 2:
         return new DoubleHashing(isKeyString);
       case 3:
-        return new SeperateChaining(isKeyString);
+        return new SeparateChaining(isKeyString);
       default:
         return null;
     }
@@ -97,7 +97,7 @@ public class StartWindow extends JFrame {
 
     // We pass 'this' (StartWindow) so MainWindow can show it again when "Back" is
     // clicked
-    demoFrame.setContentPane(new MainWindow(resolver, false, this));
+    demoFrame.setContentPane(new MainWindow(resolver, dtype.getSelectedIndex() == 1, this));
 
     demoFrame.setSize(1200, 800);
     demoFrame.setLocationRelativeTo(null);

@@ -12,12 +12,12 @@ import com.hashvis.table.Item;
 import com.hashvis.table.Row;
 import com.hashvis.table.Table;
 
-public class SeperateChaining implements CollisionResolver {
+public class SeparateChaining implements CollisionResolver {
   private boolean isKeyString = false;
 
   private HashFunction hashFunc = null;
 
-  public SeperateChaining(boolean isKeyString) {
+  public SeparateChaining(boolean isKeyString) {
     this.isKeyString = isKeyString;
   }
 

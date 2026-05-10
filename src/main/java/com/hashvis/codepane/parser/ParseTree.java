@@ -392,10 +392,4 @@ public class ParseTree {
     }
     return list;
   }
-
-  public static void main(String[] args) {
-    ParseTree tree = new ParseTree("searching ? current = (current + 1) % tableSize",
-        new SymbolTable());
-    System.out.println(tree.tree());
-  }
 }
