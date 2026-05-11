@@ -1,21 +1,21 @@
 package com.hashvis.collision;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 
-import com.hashvis.codepane.parser.SymbolTable;
-import com.hashvis.codepane.parser.func.BuiltinFunction;
-import com.hashvis.hashfunc.HashFunction;
-import com.hashvis.hashfunc.HashFunctionNumber;
-import com.hashvis.hashfunc.HashFunctionString;
-import com.hashvis.table.Table;
+import com.hashvis.hashfunc.*;
+import com.hashvis.table.*;
 
-public class QuadraticProbing extends OpenAddressing {
+public class QuadraticProbing implements CollisionResolver {
   private boolean isKeyString = false;
   private HashFunction hashFunc;
+  private Table table;
 
   public QuadraticProbing(boolean isKeyString) {
-    super(isKeyString);
+    this.isKeyString = isKeyString;
+  }
+
+  public boolean isSeperateChaining() {
+    return false;
   }
 
   @Override
@@ -29,79 +29,82 @@ public class QuadraticProbing extends OpenAddressing {
     return list;
   }
 
+  private String key;
+  private Integer hashValue = null;
+  private Integer probeValue = null;
+  private Row currentRow = null;
+  private Row availableRow = null;
+  private HashAction action;
+
   @Override
-  public SymbolTable getAlgorithmSymbolTable(Table table, SymbolTable parentTable) {
-    SymbolTable symbolTable = super.getAlgorithmSymbolTable(table, parentTable);
-    symbolTable.set("hash", new BuiltinFunction((ar) -> {
-      if (!isKeyString)
-        return BigInteger.valueOf(hashFunc.compute(((BigInteger) ar.get(0)).toString(), table.tableSize()));
-      else {
-        ArrayList<BigInteger> key = (ArrayList<BigInteger>) ar.get(0);
-        String keyStr = new String();
-        for (int i = 0; i < key.size(); i++) {
-          keyStr += (char) key.get(i).intValue();
+  public ArrayList<String> getAlgorithmAndInitalize(HashAction action, String key, Table table) {
+    this.table = table;
+    this.key = key;
+    this.action = action;
+    hashValue = null;
+    probeValue = null;
+    currentRow = null;
+    availableRow = null;
+    ArrayList<String> list = new ArrayList<String>();
+    list.add("dit me may");
+    return list;
+  }
+
+  @Override
+  public CollisionResolverResult nextStep() {
+    if (hashValue == null) {
+      hashValue = hashFunc.compute(key, table.tableSize());
+      return new CollisionResolverResult("hash = " + hashValue, 0);
+    }
+    if (probeValue == null)
+      probeValue = 0;
+    // else {
+    // probeValue = (probeValue + 1) % table.tableSize();
+    // if (probeValue == hashValue)
+    // return new CollisionResolverResult("Error: table is full", -1);
+    // }
+    if (currentRow == null) {
+      currentRow = table.getRow((hashValue + (probeValue * probeValue)) % table.tableSize());
+      table.scrollTo(currentRow);
+      return new CollisionResolverResult("Choosing bucket " + currentRow, 0);
+    }
+    Item item = currentRow.nextItem();
+    if (item != null) {
+      table.scrollTo(item);
+      if (item.isGhosted()) {
+        probeValue = probeValue + 1;
+        if (probeValue == table.tableSize())
+          return new CollisionResolverResult("Error: table is full", -1);
+        if (availableRow == null) {
+          availableRow = currentRow;
+          currentRow = null;
+          return new CollisionResolverResult("Marked bucket " + availableRow + " as available", 0);
+        } else {
+          currentRow = null;
+          return new CollisionResolverResult("Skipping bucket", 0);
         }
-        return BigInteger.valueOf(hashFunc.compute(keyStr, table.tableSize()));
       }
-    }, ""));
-    return symbolTable;
+      if (item.getText().equals(key)) {
+        if (action.equals(HashAction.INSERT))
+          return new CollisionResolverResult("Error: duplicate key", -1);
+        if (action.equals(HashAction.DELETE)) {
+          item.ghost();
+          return new CollisionResolverResult("Deleted key " + key, -1);
+        }
+        return new CollisionResolverResult("Found key " + key, -1);
+      }
+      currentRow = null;
+      probeValue = probeValue + 1;
+      if (probeValue == table.tableSize())
+        return new CollisionResolverResult("Error: table is full", -1);
+      return new CollisionResolverResult("searching bucket " + probeValue, 0);
+    }
+    if (action.equals(HashAction.INSERT)) {
+      currentRow.addItem(key);
+      currentRow.getItem(currentRow.getItemsCount() - 1).glow();
+      return new CollisionResolverResult("Inserted key " + key, -1);
+    }
+    return new CollisionResolverResult("Error: key not found", -1);
   }
 
-  public ArrayList<String> getInsertAlgorithm() {
-    ArrayList<String> list = new ArrayList<String>();
-    list.add("h := hash(key)");
-    list.add("i := 0");
-    list.add("searchDone := 0");
-    list.add("bucket = getBucket((h + i ** 2) % tableSize)");
-    list.add("searching = hasOccupied(bucket)");
-    list.add("searching ? haveKey = hasKey(bucket)");
-    list.add("searching ? haveKey ? k = getKey(bucket)");
-    list.add("searching ? haveKey ? compareKeys(k, key) == 0 ? error()");
-    list.add("searching ? (!haveKey) ? available := bucket");
-    list.add("searching ? i = i + 1");
-    list.add("searching ? searchDone = i == tableSize");
-    list.add("searching ? searchDone ? searching = 0");
-    list.add("searching ? loop()");
-    list.add("searchDone ? available ?? 0 : error()");
-    list.add("available ?? bucket = available");
-    list.add("insertKey(bucket, key)");
-    list.add("success()");
-    return list;
-  }
-
-  public ArrayList<String> getSearchAlgorithm() {
-    ArrayList<String> list = new ArrayList<String>();
-    list.add("h := hash(key)");
-    list.add("i := 0");
-    list.add("searchDone := 0");
-    list.add("bucket = getBucket((h + i ** 2) % tableSize)");
-    list.add("searching = hasOccupied(bucket)");
-    list.add("searching ? haveKey = hasKey(bucket)");
-    list.add("searching ? haveKey ? k = getKey(bucket)");
-    list.add("searching ? haveKey ? compareKeys(k, key) == 0 ? success()");
-    list.add("searching ? i = i + 1");
-    list.add("searching ? i == tableSize ? error()");
-    list.add("searching ? loop()");
-    list.add("error()");
-    return list;
-  }
-
-  public ArrayList<String> getDeleteAlgorithm() {
-    ArrayList<String> list = new ArrayList<String>();
-    list.add("h := hash(key)");
-    list.add("i := 0");
-    list.add("searchDone := 0");
-    list.add("bucket = getBucket((h + i ** 2) % tableSize)");
-    list.add("searching = hasOccupied(bucket)");
-    list.add("searching ? haveKey = hasKey(bucket)");
-    list.add("searching ? haveKey ? k = getKey(bucket)");
-    list.add("searching ? haveKey ? found = compareKeys(k, key) == 0");
-    list.add("searching ? haveKey ? found ? deleteKey(k)");
-    list.add("searching ? haveKey ? found ? success()");
-    list.add("searching ? i = i + 1");
-    list.add("searching ? i == tableSize ? error()");
-    list.add("searching ? loop()");
-    list.add("error()");
-    return list;
-  }
 }

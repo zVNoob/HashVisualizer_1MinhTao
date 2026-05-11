@@ -3,6 +3,7 @@ package com.hashvis.ui;
 import javax.swing.*;
 
 import com.hashvis.collision.CollisionResolver;
+import com.hashvis.collision.CollisionResolver.HashAction;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -28,7 +29,7 @@ public class ControlPanel extends JPanel {
   }
 
   public interface ActionListener {
-    void setActionCode(ArrayList<String> code, String key);
+    void setAction(CollisionResolver.HashAction action, String key);
 
     void startAnimate(Runnable callback);
 
@@ -113,14 +114,14 @@ public class ControlPanel extends JPanel {
   }
 
   private void onCBAction() {
-    ArrayList<String> code = null;
+    CollisionResolver.HashAction result;
     if (cbAction.getSelectedIndex() == 0) {
-      code = resolver.getInsertAlgorithm();
+      result = HashAction.INSERT;
     } else if (cbAction.getSelectedIndex() == 1) {
-      code = resolver.getSearchAlgorithm();
+      result = HashAction.SEARCH;
     } else {
-      code = resolver.getDeleteAlgorithm();
+      result = HashAction.DELETE;
     }
-    listener.setActionCode(code, txtKey.getText());
+    listener.setAction(result, txtKey.getText());
   }
 }

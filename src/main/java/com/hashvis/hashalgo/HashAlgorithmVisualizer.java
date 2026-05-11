@@ -1,6 +1,6 @@
 package com.hashvis.hashalgo;
 
-import com.hashvis.codepane.parser.SymbolTable;
+import com.hashvis.collision.CollisionResolver;
 
 import javax.swing.*;
 import java.awt.*;
@@ -15,8 +15,6 @@ public class HashAlgorithmVisualizer extends JPanel {
 
   // Logic Components
   private final ArrayList<HighlightedCodePane> sourceCodes = new ArrayList<>();
-  private SymbolTable symbolTable;
-  private HashAlgorithmSymbolTable baseSymbolTable = new HashAlgorithmSymbolTable();
   private int currentHighlighted = 0;
 
   public HashAlgorithmVisualizer() {
@@ -60,26 +58,13 @@ public class HashAlgorithmVisualizer extends JPanel {
     add(codeScrollPane, BorderLayout.CENTER);
   }
 
-  public void setSymbolTable(SymbolTable table) {
-    this.symbolTable = table;
-  }
-
-  public SymbolTable getBaseSymbolTable() {
-    return baseSymbolTable;
-  }
-
   public void reset(ArrayList<String> sourceCodesText) {
-    if (symbolTable == null)
-      return;
     // Clear existing components from the codeArea
     codeArea.removeAll();
     this.sourceCodes.clear();
-
-    SymbolTable symtab = new SymbolTable(symbolTable);
-
     // Add new HighlightedCodePanes
     for (String line : sourceCodesText) {
-      HighlightedCodePane pane = new HighlightedCodePane(symtab, line, true);
+      HighlightedCodePane pane = new HighlightedCodePane(line);
       codeArea.add(pane);
       codeArea.add(Box.createVerticalStrut(5));
       this.sourceCodes.add(pane);
@@ -91,29 +76,22 @@ public class HashAlgorithmVisualizer extends JPanel {
 
     if (!this.sourceCodes.isEmpty()) {
       currentHighlighted = 0;
-      baseSymbolTable.resetInstructionCount();
       this.sourceCodes.get(currentHighlighted).glow();
     } else {
       currentHighlighted = -1;
     }
   }
 
-  public boolean next() {
-    if (symbolTable == null)
-      return false;
+  public boolean onStep(CollisionResolver.CollisionResolverResult actionResult) {
+
     if (currentHighlighted == -1)
       return false;
 
-    Object status = sourceCodes.get(currentHighlighted).eval();
-    if (status instanceof String) {
-      statusLabel.setText("Status: " + (String) status);
-    }
+    statusLabel.setText("Status: " + actionResult.message());
 
     sourceCodes.get(currentHighlighted).deglow();
-    baseSymbolTable.incrementInstructionCount();
 
-    currentHighlighted = baseSymbolTable.getInstructionCount();
-
+    currentHighlighted = actionResult.currentLine();
     if (currentHighlighted >= sourceCodes.size()) {
       currentHighlighted = -1;
     }

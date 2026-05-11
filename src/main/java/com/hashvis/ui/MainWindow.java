@@ -37,27 +37,29 @@ public class MainWindow extends JPanel {
 
     this.controlPanel = new ControlPanel(new ControlPanel.ActionListener() {
       @Override
-      public void setActionCode(ArrayList<String> code, String key) {
+      public void setAction(CollisionResolver.HashAction action, String key) {
+        ArrayList<String> code = resolver.getAlgorithmAndInitalize(action, key, hashTable);
         visualizer.reset(code);
-        visualizer.getBaseSymbolTable().set("n", hashTable.tableSize());
-        if (isKeyString) {
-          ArrayList<BigInteger> keyArr = new ArrayList<BigInteger>();
-          for (int i = 0; i < key.length(); i++) {
-            keyArr.add(BigInteger.valueOf(key.charAt(i)));
-          }
-          visualizer.getBaseSymbolTable().set("key", keyArr);
-        } else {
-          if (key.length() == 0)
-            key = "0";
-          visualizer.getBaseSymbolTable().set("key", new BigInteger(key));
-        }
+        // visualizer.getBaseSymbolTable().set("n", hashTable.tableSize());
+        // if (isKeyString) {
+        // ArrayList<BigInteger> keyArr = new ArrayList<BigInteger>();
+        // for (int i = 0; i < key.length(); i++) {
+        // keyArr.add(BigInteger.valueOf(key.charAt(i)));
+        // }
+        // visualizer.getBaseSymbolTable().set("key", keyArr);
+        // } else {
+        // if (key.length() == 0)
+        // key = "0";
+        // visualizer.getBaseSymbolTable().set("key", new BigInteger(key));
+        // }
       }
 
       @Override
       public void startAnimate(Runnable callback) {
         hashTable.reset();
         animTimer = new Timer(500, e -> {
-          if (!visualizer.next()) {
+          CollisionResolver.CollisionResolverResult result = resolver.nextStep();
+          if (!visualizer.onStep(result)) {
             callback.run();
             animTimer.stop();
           }
@@ -94,7 +96,8 @@ public class MainWindow extends JPanel {
         hashTablePanel.add(hashTable, BorderLayout.CENTER);
         hashTablePanel.revalidate();
         hashTablePanel.repaint();
-        visualizer.setSymbolTable(resolver.getAlgorithmSymbolTable(hashTable, visualizer.getBaseSymbolTable()));
+        // visualizer.setSymbolTable(resolver.getAlgorithmSymbolTable(hashTable,
+        // visualizer.getBaseSymbolTable()));
         revertReset();
       }
     }, resolver);

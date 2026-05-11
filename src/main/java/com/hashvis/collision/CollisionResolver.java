@@ -2,20 +2,30 @@ package com.hashvis.collision;
 
 import java.util.ArrayList;
 
-import com.hashvis.codepane.parser.SymbolTable;
 import com.hashvis.hashfunc.HashFunction;
 import com.hashvis.table.Table;
 
 public interface CollisionResolver {
-  SymbolTable getAlgorithmSymbolTable(Table table, SymbolTable parentTable);
+
+  public enum HashAction {
+    INSERT, SEARCH, DELETE
+  }
+
+  public record CollisionResolverResult(String message, int currentLine) {
+  }
+  // SymbolTable getAlgorithmSymbolTable(Table table, SymbolTable parentTable);
 
   boolean isSeperateChaining();
 
   ArrayList<HashFunction> getHashFunctionFields();
 
-  ArrayList<String> getInsertAlgorithm();
+  // ArrayList<String> getInsertAlgorithm();
+  //
+  // ArrayList<String> getSearchAlgorithm();
+  //
+  // ArrayList<String> getDeleteAlgorithm();
+  ArrayList<String> getAlgorithmAndInitalize(HashAction action, String key, Table table);
 
-  ArrayList<String> getSearchAlgorithm();
+  CollisionResolverResult nextStep();
 
-  ArrayList<String> getDeleteAlgorithm();
 }

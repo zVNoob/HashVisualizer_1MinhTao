@@ -8,7 +8,7 @@ import java.awt.*;
 import java.awt.geom.Path2D;
 
 public class HighlightedCodePane extends JPanel {
-  private final CodePane codePane;
+  private final JLabel codePane;
   private final MarkerComponent marker;
   private final Timer animationTimer;
 
@@ -19,26 +19,35 @@ public class HighlightedCodePane extends JPanel {
   private final float step = 0.05f; // Speed of color transition (0.0 to 1.0)
 
   public HighlightedCodePane() {
-    this(new SymbolTable(), "sum(len(s))", true);
+    this("sum(len(s))");
   }
 
-  public HighlightedCodePane(SymbolTable symbolTable, String text, boolean readOnly) {
+  public HighlightedCodePane(String text) {
     // Layout Setup
     // setLayout(new BorderLayout(10, 0));
-    setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+    setLayout(new GridBagLayout());
     setAlignmentY(TOP_ALIGNMENT);
     setBackground(Color.DARK_GRAY); // Match the visual style of the original
 
+    GridBagConstraints gbc = new GridBagConstraints();
+    gbc.gridx = 0;
+    gbc.gridy = 0;
+    gbc.weightx = 0.0;
+    gbc.weighty = 0.0;
     // Marker (The Polygon replacement)
     marker = new MarkerComponent();
     marker.setAlignmentY(Component.CENTER_ALIGNMENT);
-    add(marker);
+    add(marker, gbc);
 
     // CodePane (The JTextPane replacement)
-    codePane = new CodePane(symbolTable, text, readOnly);
+    codePane = new JLabel(text);
+    codePane.setForeground(Color.WHITE);
     codePane.setAlignmentY(Component.CENTER_ALIGNMENT);
-    // codePane.validateExpr();
-    add(codePane);
+    gbc.gridx = 1;
+    add(codePane, gbc);
+    gbc.weightx = 1.0;
+    gbc.gridx = 2;
+    add(Box.createHorizontalStrut(10), gbc);
 
     // Animation Timer (Replacement for FX Timeline)
     // Runs every 16ms (~60 FPS)
@@ -64,10 +73,6 @@ public class HighlightedCodePane extends JPanel {
   @Override
   public Dimension getMinimumSize() {
     return new Dimension(0, codePane.getPreferredSize().height);
-  }
-
-  public Object eval() {
-    return codePane.eval();
   }
 
   public void glow() {
@@ -118,9 +123,9 @@ public class HighlightedCodePane extends JPanel {
       // FX points: -50, 24, -50, 46, -35, 35
       // We translate these to a small component size
       Path2D triangle = new Path2D.Double();
-      triangle.moveTo(0, 10); // Top left
-      triangle.lineTo(0, 30); // Bottom left
-      triangle.lineTo(15, 20); // Tip (Right)
+      triangle.moveTo(0, 0); // Top left
+      triangle.lineTo(0, 14); // Bottom left
+      triangle.lineTo(7, 7); // Tip (Right)
       triangle.closePath();
 
       g2d.fill(triangle);
@@ -128,7 +133,12 @@ public class HighlightedCodePane extends JPanel {
 
     @Override
     public Dimension getPreferredSize() {
-      return new Dimension(20, 40);
+      return new Dimension(10, 20);
+    }
+
+    @Override
+    public Dimension getMinimumSize() {
+      return new Dimension(10, 20);
     }
   }
 }
